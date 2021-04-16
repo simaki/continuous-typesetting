@@ -39,6 +39,7 @@ jobs:
         with:
           name: main.pdf
           path: main.pdf
+          retention-days: 730
 
       - name: Create Release
         id: create_release
@@ -55,7 +56,7 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Upload PDF
+      - name: Upload PDF as a Release
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
