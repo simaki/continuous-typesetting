@@ -39,7 +39,6 @@ jobs:
         with:
           name: main.pdf
           path: main.pdf
-          retention-days: 730
 
       - name: Create Release
         id: create_release
