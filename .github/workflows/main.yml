@@ -1,0 +1,61 @@
+name: Typeset
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+jobs:
+
+  typeset:
+
+    name: Typeset
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Compile (Tectonic)
+        id: compile_tectonic
+        uses: vinay0410/tectonic-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tex_path: 'main.tex'
+        
+        # If Tectonic fails, compile using pLaTeX
+      - name: Compile (pLaTeX)
+        uses: tsukuba-mas/platex-action@main
+        with:
+          LATEX_FILE_NAME: "main.tex"
+        if: failure() && steps.compile_tectonic.outcome == 'failure'
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_id }}
+          release_name: Release ${{ github.run_id }}
+          body: |
+            * Reference: ${{ github.ref }}
+            * Workflow: [${{ github.run_id }}](https://github.com/simaki/latex-ci/actions/runs/${{ github.run_id }})
+            * Commit: ${{ github.sha }}
+          draft: false
+          prerelease: false
+
+      - name: Upload PDF
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./main.pdf
+          asset_name: main.pdf
+          asset_content_type: application/pdf
